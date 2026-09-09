@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rinards Game Forge</title>
+<style>
+:root{--bg:#090b12;--panel:#111522;--panel2:#181e2d;--line:#2b3449;--txt:#f5f7ff;--mut:#99a4bb;--acc:#7c5cff;--acc2:#21d4fd;--good:#38df88;--bad:#ff5577}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(circle at top,#171c31,#090b12 55%);color:var(--txt);font:14px system-ui,-apple-system,Segoe UI,sans-serif;overflow:hidden}
+button,input,select{font:inherit}.top{height:64px;display:flex;align-items:center;gap:9px;padding:0 14px;background:#0b0e17e8;border-bottom:1px solid var(--line);backdrop-filter:blur(12px)}
+.brand{display:flex;align-items:center;gap:10px;font-weight:900;font-size:17px;margin-right:12px}.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,var(--acc),var(--acc2));display:grid;place-items:center;box-shadow:0 0 25px #745cff55}.logo:after{content:"G";font-size:23px;font-weight:1000;color:white}
+button{border:1px solid var(--line);background:#171c29;color:var(--txt);padding:8px 11px;border-radius:9px;cursor:pointer}button:hover{background:#222a3d}.primary{background:linear-gradient(135deg,var(--acc),#5c8cff);border:0;font-weight:800}.danger{color:#ffb5c3}.grow{flex:1}.layout{height:calc(100vh - 64px);display:grid;grid-template-columns:245px 1fr 280px}
+.side{background:#10141f;border-right:1px solid var(--line);padding:12px;overflow:auto}.side.right{border-right:0;border-left:1px solid var(--line)}
+.title{font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mut);margin:12px 2px 8px}.assets{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.asset{height:82px;padding:7px;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:5px}.asset .ico{font-size:28px}.asset small{color:var(--mut)}
+.center{min-width:0;display:flex;flex-direction:column}.bar{height:48px;display:flex;align-items:center;gap:8px;padding:7px 10px;background:#0e121d;border-bottom:1px solid var(--line)}
+.stagewrap{flex:1;overflow:auto;display:grid;place-items:center;padding:26px;background-image:linear-gradient(#ffffff08 1px,transparent 1px),linear-gradient(90deg,#ffffff08 1px,transparent 1px);background-size:24px 24px}
+#stage{width:960px;height:540px;position:relative;overflow:hidden;background:#202d46;border:2px solid #3a4661;border-radius:12px;box-shadow:0 20px 70px #0008;touch-action:none}
+.obj{position:absolute;display:grid;place-items:center;user-select:none;cursor:grab;border:2px solid transparent}.obj.sel{border-color:#fff;box-shadow:0 0 0 3px #7c5cffaa}.obj .symbol{font-size:30px;pointer-events:none}.obj.text .symbol{font-size:18px;font-weight:800}
+.field{margin:9px 0}.field label{display:block;color:var(--mut);font-size:11px;margin-bottom:4px}.field input,.field select{width:100%;background:#090d16;color:white;border:1px solid var(--line);border-radius:8px;padding:8px}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:7px}.hint{color:var(--mut);font-size:12px;line-height:1.45}.pill{padding:5px 8px;border-radius:999px;background:#171d2b;color:#b9c4d9;font-size:12px}
+#toast{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);background:#05070cdd;padding:10px 16px;border:1px solid #3b4660;border-radius:10px;opacity:0;pointer-events:none;transition:.2s}
+.modal{position:fixed;inset:0;background:#000a;display:none;place-items:center;z-index:20}.modal.show{display:grid}.card{width:min(560px,90vw);background:#121725;border:1px solid var(--line);border-radius:16px;padding:18px;box-shadow:0 30px 90px #000}.card h2{margin-top:0}.card textarea{width:100%;height:210px;background:#080b12;color:#dce5ff;border:1px solid var(--line);border-radius:9px;padding:10px}
+@media(max-width:900px){.layout{grid-template-columns:190px 1fr}.right{display:none}.brand span{display:none}}
+</style>
+</head>
+<body>
+<div class="top">
+ <div class="brand"><div class="logo"></div><span>RINARDS GAME FORGE</span></div>
+ <button id="new">＋ Neu</button><button id="save">💾 Speichern</button><button id="load">📂 Laden</button>
+ <button id="json">↕ Projekt</button><div class="grow"></div><span class="pill">Level <b id="levelNum">1</b></span>
+ <button id="addLevel">＋ Level</button>
+</div>
+<div class="layout">
+<aside class="side">
+ <div class="title">Bauteile – ziehen oder klicken</div>
+ <div class="assets">
+  <button class="asset" draggable="true" data-kind="player"><span class="ico">🤖</span><small>Spieler</small></button>
+  <button class="asset" draggable="true" data-kind="enemy"><span class="ico">👾</span><small>Gegner</small></button>
+  <button class="asset" draggable="true" data-kind="wall"><span class="ico">🧱</span><small>Wand</small></button>
+  <button class="asset" draggable="true" data-kind="coin"><span class="ico">💎</span><small>Kristall</small></button>
+  <button class="asset" draggable="true" data-kind="goal"><span class="ico">🚩</span><small>Ziel</small></button>
+  <button class="asset" draggable="true" data-kind="key"><span class="ico">🔑</span><small>Schlüssel</small></button>
+  <button class="asset" draggable="true" data-kind="door"><span class="ico">🚪</span><small>Tür</small></button>
+  <button class="asset" draggable="true" data-kind="heart"><span class="ico">❤️</span><small>Leben</small></button>
+  <button class="asset" draggable="true" data-kind="lava"><span class="ico">🔥</span><small>Gefahr</small></button>
+  <button class="asset" draggable="true" data-kind="text"><span class="ico">T</span><small>Text</small></button>
+ </div>
+ <div class="title">Welt</div>
+ <div class="field"><label>Hintergrund</label><input id="bg" type="color" value="#202d46"></div>
+ <div class="field"><label>Spieler-Speed</label><input id="speed" type="range" min="2" max="14" value="6"></div>
+ <div class="hint">Tipp: Zieh die Bauteile direkt auf die Karte. Im Spiel: <b>WASD</b> oder Pfeiltasten.</div>
+</aside>
+<section class="center">
+ <div class="bar"><button class="primary" id="play">▶ SPIELEN</button><button id="stop">■ Stop</button><button id="undo">↶</button><button id="dup">⧉ Kopieren</button><button id="del" class="danger">⌫ Löschen</button><div class="grow"></div><span class="pill">❤️ <b id="lives">3</b></span><span class="pill">💎 <b id="score">0</b></span><span id="state" class="pill">EDITOR</span></div>
+ <div class="stagewrap"><div id="stage"></div></div>
+</section>
+<aside class="side right">
+ <div class="title">Inspector</div><div id="empty" class="hint">Wähle ein Objekt aus.</div>
+ <div id="props" hidden>
+  <div class="field"><label>Name</label><input id="pname"></div>
+  <div class="two"><div class="field"><label>X</label><input id="px" type="number"></div><div class="field"><label>Y</label><input id="py" type="number"></div></div>
+  <div class="two"><div class="field"><label>Breite</label><input id="pw" type="number"></div><div class="field"><label>Höhe</label><input id="ph" type="number"></div></div>
+  <div class="field"><label>Farbe</label><input id="pcolor" type="color"></div>
+  <div class="field"><label>Symbol / Text</label><input id="ptext"></div>
+  <div class="field"><label>Verhalten</label><select id="pbehavior"><option>static</option><option>player</option><option>enemy</option><option>coin</option><option>goal</option><option>key</option><option>door</option><option>heart</option><option>lava</option></select></div>
+  <div class="field"><label>Gegner-Bewegung</label><select id="pmove"><option value="none">Keine</option><option value="horizontal">Links / Rechts</option><option value="vertical">Hoch / Runter</option></select></div>
+ </div>
+ <div class="title">Features</div><div class="hint">✓ Drag & Drop<br>✓ mehrere Level<br>✓ Gegner-Bewegung<br>✓ Leben & Punkte<br>✓ Schlüssel & Türen<br>✓ Speichern/Laden<br>✓ Projekt Export/Import<br>✓ Playtest direkt im Editor</div>
+</aside>
+</div>
+<div id="toast"></div>
+<div id="modal" class="modal"><div class="card"><h2>Projekt exportieren / importieren</h2><textarea id="box"></textarea><p class="hint">Kopiere den Code zum Sichern oder füge einen Projekt-Code ein.</p><button id="apply" class="primary">Importieren</button> <button id="close">Schließen</button></div></div>
+<script>
+const $=id=>document.getElementById(id), stage=$('stage');
+const defs={
+player:['🤖',56,56,'#4f9dff','player'],enemy:['👾',56,56,'#ff5577','enemy'],wall:['',130,42,'#667085','static'],
+coin:['💎',38,38,'#30d5ff','coin'],goal:['🚩',70,70,'#39df88','goal'],key:['🔑',42,42,'#ffd34e','key'],
+door:['🚪',58,90,'#9b6b43','door'],heart:['❤️',42,42,'#ff7891','heart'],lava:['🔥',110,45,'#ff643d','lava'],
+text:['TEXT',150,48,'#7c5cff','static']};
+let project={bg:'#202d46',speed:6,levels:[[]]},level=0,selected=null,playing=false,keys={},score=0,lives=3,hasKey=false,snapshot=null,history=[];
+const objs=()=>project.levels[level], uid=()=>Math.random().toString(36).slice(2,10);
+function toast(t){let e=$('toast');e.textContent=t;e.style.opacity=1;setTimeout(()=>e.style.opacity=0,1300)}
+function snap(){history.push(JSON.stringify(project));if(history.length>30)history.shift()}
+function add(kind,x=120,y=100){snap();let d=defs[kind];let o={id:uid(),kind,name:kind,x,y,w:d[1],h:d[2],color:d[3],text:d[0],behavior:d[4],move:'none',dir:1};objs().push(o);selected=o.id;render();inspect()}
+function render(){stage.style.background=project.bg;stage.innerHTML='';objs().forEach(o=>{let e=document.createElement('div');e.className='obj '+o.kind+(o.id===selected&&!playing?' sel':'');e.dataset.id=o.id;e.style.cssText=`left:${o.x}px;top:${o.y}px;width:${o.w}px;height:${o.h}px;background:${o.color};border-radius:${o.kind==='coin'||o.kind==='heart'?'50%':'8px'}`;e.innerHTML=`<div class="symbol">${esc(o.text)}</div>`;if(!playing)drag(e,o);e.onclick=ev=>{if(!playing){ev.stopPropagation();selected=o.id;render();inspect()}};stage.appendChild(e)})}
+function esc(s){return String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function drag(e,o){let sx,sy,ox,oy,on=false;e.onpointerdown=v=>{on=true;snap();sx=v.clientX;sy=v.clientY;ox=o.x;oy=o.y;e.setPointerCapture(v.pointerId)};e.onpointermove=v=>{if(!on)return;o.x=Math.max(0,Math.min(960-o.w,ox+v.clientX-sx));o.y=Math.max(0,Math.min(540-o.h,oy+v.clientY-sy));e.style.left=o.x+'px';e.style.top=o.y+'px'};e.onpointerup=()=>{on=false;inspect()}}
+document.querySelectorAll('.asset').forEach(b=>{b.onclick=()=>add(b.dataset.kind);b.ondragstart=e=>e.dataTransfer.setData('kind',b.dataset.kind)});
+stage.ondragover=e=>e.preventDefault();stage.ondrop=e=>{e.preventDefault();let r=stage.getBoundingClientRect(),k=e.dataTransfer.getData('kind');if(k)add(k,e.clientX-r.left-25,e.clientY-r.top-25)};stage.onclick=()=>{if(!playing){selected=null;render();inspect()}};
+const fields={name:$('pname'),x:$('px'),y:$('py'),w:$('pw'),h:$('ph'),color:$('pcolor'),text:$('ptext'),behavior:$('pbehavior'),move:$('pmove')};
+function cur(){return objs().find(o=>o.id===selected)}
+function inspect(){let o=cur();$('props').hidden=!o;$('empty').hidden=!!o;if(!o)return;for(let k in fields)fields[k].value=o[k]}
+Object.entries(fields).forEach(([k,e])=>e.onchange=()=>{let o=cur();if(!o)return;snap();o[k]=['x','y','w','h'].includes(k)?+e.value:e.value;render()});
+$('bg').oninput=e=>{project.bg=e.target.value;render()};$('speed').oninput=e=>project.speed=+e.target.value;
+$('del').onclick=()=>{if(!selected)return;snap();project.levels[level]=objs().filter(o=>o.id!==selected);selected=null;render();inspect()};
+$('dup').onclick=()=>{let o=cur();if(!o)return;snap();let n={...o,id:uid(),x:o.x+20,y:o.y+20,name:o.name+' Kopie'};objs().push(n);selected=n.id;render();inspect()};
+$('undo').onclick=()=>{if(!history.length)return;project=JSON.parse(history.pop());level=Math.min(level,project.levels.length-1);selected=null;sync();render();inspect()};
+$('new').onclick=()=>{if(confirm('Neues Spiel erstellen?')){project={bg:'#202d46',speed:6,levels:[[]]};level=0;history=[];sync();render()}};
+$('save').onclick=()=>{localStorage.setItem('forgeProject',JSON.stringify(project));toast('Spiel gespeichert ✓')};
+$('load').onclick=()=>{let d=localStorage.getItem('forgeProject');if(d){project=JSON.parse(d);level=0;sync();render();toast('Spiel geladen ✓')}else toast('Noch kein Spiel gespeichert')};
+$('addLevel').onclick=()=>{snap();project.levels.push([]);level=project.levels.length-1;selected=null;sync();render();toast('Level '+(level+1)+' erstellt')};
+function sync(){$('bg').value=project.bg;$('speed').value=project.speed;$('levelNum').textContent=level+1}
+$('json').onclick=()=>{$('box').value=JSON.stringify(project,null,2);$('modal').classList.add('show')};$('close').onclick=()=>$('modal').classList.remove('show');$('apply').onclick=()=>{try{project=JSON.parse($('box').value);level=0;sync();render();$('modal').classList.remove('show');toast('Projekt importiert ✓')}catch(e){alert('Projekt-Code ist ungültig.')}};
+function hit(a,b){return a.x<b.x+b.w&&a.x+a.w>b.x&&a.y<b.y+b.h&&a.y+a.h>b.y}
+function start(){let p=objs().find(o=>o.behavior==='player');if(!p)return toast('Füge einen Spieler hinzu');snapshot=JSON.stringify(project);playing=true;selected=null;score=0;lives=3;hasKey=false;$('score').textContent=0;$('lives').textContent=3;$('state').textContent='PLAY';render();requestAnimationFrame(loop)}
+function stop(reset=true){playing=false;keys={};$('state').textContent='EDITOR';if(reset&&snapshot){project=JSON.parse(snapshot);sync()}render()}
+function loop(){if(!playing)return;let a=objs(),p=a.find(o=>o.behavior==='player');if(!p)return stop();let s=project.speed,dx=0,dy=0;if(keys.a||keys.arrowleft)dx-=s;if(keys.d||keys.arrowright)dx+=s;if(keys.w||keys.arrowup)dy-=s;if(keys.s||keys.arrowdown)dy+=s;let ox=p.x,oy=p.y;p.x=Math.max(0,Math.min(960-p.w,p.x+dx));p.y=Math.max(0,Math.min(540-p.h,p.y+dy));
+a.filter(o=>o.behavior==='enemy'&&o.move!=='none').forEach(o=>{let v=2*o.dir;if(o.move==='horizontal'){o.x+=v;if(o.x<0||o.x+o.w>960){o.dir*=-1;o.x=Math.max(0,Math.min(960-o.w,o.x))}}else{o.y+=v;if(o.y<0||o.y+o.h>540){o.dir*=-1;o.y=Math.max(0,Math.min(540-o.h,o.y))}}});
+for(let o of [...a]){if(o.id===p.id||!hit(p,o))continue;if(o.behavior==='static'||(o.behavior==='door'&&!hasKey)){p.x=ox;p.y=oy}
+if(o.behavior==='coin'){project.levels[level]=objs().filter(x=>x.id!==o.id);score++;$('score').textContent=score}
+if(o.behavior==='key'){project.levels[level]=objs().filter(x=>x.id!==o.id);hasKey=true;toast('Schlüssel gefunden 🔑')}
+if(o.behavior==='door'&&hasKey){project.levels[level]=objs().filter(x=>x.id!==o.id);hasKey=false}
+if(o.behavior==='heart'){project.levels[level]=objs().filter(x=>x.id!==o.id);lives=Math.min(5,lives+1);$('lives').textContent=lives}
+if(o.behavior==='enemy'||o.behavior==='lava'){lives--;$('lives').textContent=lives;p.x=30;p.y=30;if(lives<=0){alert('GAME OVER – Punkte: '+score);stop();return}}
+if(o.behavior==='goal'){if(level<project.levels.length-1){level++;sync();toast('LEVEL '+(level+1));render();requestAnimationFrame(loop);return}else{alert('🏆 DU HAST GEWONNEN! Punkte: '+score);stop();return}}}
+render();requestAnimationFrame(loop)}
+$('play').onclick=start;$('stop').onclick=()=>stop();window.onkeydown=e=>{keys[e.key.toLowerCase()]=true;if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight'].includes(e.key))e.preventDefault()};window.onkeyup=e=>keys[e.key.toLowerCase()]=false;
+add('player',55,240);add('coin',250,100);add('enemy',430,250);objs()[2].move='vertical';add('wall',300,350);add('key',610,100);add('door',700,220);add('goal',850,230);history=[];selected=null;sync();render();inspect();
+</script></body></html>
